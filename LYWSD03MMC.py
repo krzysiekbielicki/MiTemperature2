@@ -669,14 +669,9 @@ elif args.passive:
 					measurement.humidity=round(measurement.humidity,1)
 
 				if mac in sensors and "sensorname" in sensors[mac]:
-					print("Sensorname:",  sensors[mac]["sensorname"])
+					measurement.sensorname = sensors[mac]["sensorname"]
 
-				logging.debug("Temperature: "+ measurement.temperature)
-				logging.debug("Humidity: "+ measurement.humidity)
-				if measurement.voltage != None:
-					logging.debug ("Battery voltage:"+ measurement.voltage+"V")
-				logging.debug ("RSSI:"+ rssi+ "dBm")
-				logging.debug ("Battery:"+ measurement.battery+"%")
+				logging.debug("Measurement", extra=measurement)
 				
 				currentMQTTTopic = MQTTTopic
 				if mac in sensors:
