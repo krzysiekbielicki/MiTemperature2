@@ -4,6 +4,7 @@ import configparser
 import argparse
 import os
 import json as JSON
+import logging
 
 parser = argparse.ArgumentParser(allow_abbrev=False)
 parser.add_argument("--readfile", "-rf", help="Specify filename of json-File to convert",
@@ -13,8 +14,8 @@ parser.add_argument("--writefile", "-wf", help="Specify filename of json-File to
 args = parser.parse_args()
 
 if not os.path.exists(args.readfile):
-    print("Error specified device list file '",
-          args.devicelistfile, "' not found")
+    logging.error("Error specified device list file '" +
+          args.devicelistfile + "' not found")
     os._exit(1)
 
 with open (args.readfile,"r") as json_file:

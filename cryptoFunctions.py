@@ -1,6 +1,7 @@
 import struct
 import binascii
 from Cryptodome.Cipher import AES
+import logging
 
 #pycryptodome
 
@@ -37,7 +38,7 @@ def decrypt_payload(payload, key, nonce, mac):
 		for x in range(-1,-len(mac),-2):
 			macReversed += mac[x-1] + mac[x] + ":"
 		macReversed = macReversed.upper()[:-1]
-		print("ERROR: Decryption failed with sensor MAC (probably wrong key provided):", macReversed)
+		logging.error("ERROR: Decryption failed with sensor MAC (probably wrong key provided):"+ macReversed)
 		return None
 	#print("DecryptData:", data.hex())
 	#print()
@@ -57,5 +58,5 @@ def decrypt_aes_ccm(key, mac, data):
 		nonce = b"".join([mac, pkt[:5]])
 		return decrypt_payload(pkt[5:], key, nonce, mac)
 	else:
-		print("Error: format packet!")
+		logging.error("Error: format packet!")
 	return None

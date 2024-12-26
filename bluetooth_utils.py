@@ -52,6 +52,7 @@ import fcntl
 import array
 import socket
 from errno import EALREADY
+import logging
 
 # import PyBluez
 import bluetooth._bluetooth as bluez
@@ -113,7 +114,7 @@ def toggle_device(dev_id, enable):
     hci_sock = socket.socket(socket.AF_BLUETOOTH,
                              socket.SOCK_RAW,
                              socket.BTPROTO_HCI)
-    print("Power %s bluetooth device %d" % ('ON' if enable else 'OFF', dev_id))
+    logging.debug("Power %s bluetooth device %d" % ('ON' if enable else 'OFF', dev_id))
     # di = struct.pack("HbBIBBIIIHHHH10I", dev_id, *((0,) * 22))
     # fcntl.ioctl(hci_sock.fileno(), bluez.HCIGETDEVINFO, di)
     req_str = struct.pack("H", dev_id)
@@ -124,7 +125,7 @@ def toggle_device(dev_id, enable):
                     request[0])
     except IOError as e:
         if e.errno == EALREADY:
-            print("Bluetooth device %d is already %s" % (
+            logging.exception("Bluetooth device %d is already %s" % (
                   dev_id, 'enabled' if enable else 'disabled'))
         else:
             raise
@@ -166,7 +167,7 @@ def set_scan(dev_id, scan_type):
         raise ValueError("Unknown scan type %r" % scan_type)
 
     req_str = struct.pack("HI", dev_id, dev_opt)
-    print("Set scan type %r to bluetooth device %d" % (scan_type, dev_id))
+    logging.debug("Set scan type %r to bluetooth device %d" % (scan_type, dev_id))
     try:
         fcntl.ioctl(hci_sock.fileno(), bluez.HCISETSCAN, req_str)
     finally:
@@ -202,12 +203,12 @@ def enable_le_scan(sock, interval=0x0800, window=0x0800,
     .. note:: Scan interval and window are to multiply by 0.625 ms to
         get the real time duration.
     """
-    print("Enable LE scan")
+    logging.debug("Enable LE scan")
     own_bdaddr_type = LE_PUBLIC_ADDRESS  # does not work with LE_RANDOM_ADDRESS
     cmd_pkt = struct.pack("<BHHBB", SCAN_TYPE_PASSIVE, interval, window,
                           own_bdaddr_type, filter_policy)
     bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_PARAMETERS, cmd_pkt)
-    print("scan params: interval=%.3fms window=%.3fms own_bdaddr=%s "
+    logging.debug("scan params: interval=%.3fms window=%.3fms own_bdaddr=%s "
           "whitelist=%s" %
           (interval * 0.625, window * 0.625,
            'public' if own_bdaddr_type == LE_PUBLIC_ADDRESS else 'random',
@@ -225,7 +226,7 @@ def disable_le_scan(sock):
     :param sock: A bluetooth HCI socket (retrieved using the
         ``hci_open_dev`` PyBluez function).
     """
-    print("Disable LE scan")
+    logging.debug("Disable LE scan")
     cmd_pkt = struct.pack("<BB", SCAN_DISABLE, 0x00)
     bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_SCAN_ENABLE, cmd_pkt)
 
@@ -267,7 +268,7 @@ def start_le_advertising(sock, min_interval=1000, max_interval=1000,
                          data_length)
     cmd_pkt = struct.pack("<B%dB" % data_length, data_length, *data)
     bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISING_DATA, cmd_pkt)
-    print("Advertising started data_length=%d data=%r" % (data_length, data))
+    logging.debug("Advertising started data_length=%d data=%r" % (data_length, data))
 
 
 def stop_le_advertising(sock):
@@ -279,7 +280,7 @@ def stop_le_advertising(sock):
     """
     cmd_pkt = struct.pack("<B", 0x00)
     bluez.hci_send_cmd(sock, OGF_LE_CTL, OCF_LE_SET_ADVERTISE_ENABLE, cmd_pkt)
-    print("Advertising stopped")
+    logging.debug("Advertising stopped")
 
 
 def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
@@ -322,8 +323,8 @@ def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
     bluez.hci_filter_set_event(flt, LE_META_EVENT)
     sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, flt)
 
-    print("socket filter set to ptype=HCI_EVENT_PKT event=LE_META_EVENT")
-    print("Listening ...")
+    logging.debug("socket filter set to ptype=HCI_EVENT_PKT event=LE_META_EVENT")
+    logging.debug("Listening ...")
 
     try:
         while True:
@@ -332,13 +333,13 @@ def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
 
             if event != LE_META_EVENT:
                 # Should never occur because we filtered with this type of event
-                print("Not a LE_META_EVENT !")
+                logging.debug("Not a LE_META_EVENT !")
                 continue
 
             sub_event, = struct.unpack("B", pkt[3:4])
             if sub_event != EVT_LE_ADVERTISING_REPORT:
                 if debug:
-                    print("Not a EVT_LE_ADVERTISING_REPORT !")
+                    logging.debug("Not a EVT_LE_ADVERTISING_REPORT !")
                 continue
 
             pkt = pkt[4:]
@@ -348,9 +349,9 @@ def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
             if packet_length and plen != packet_length:
                 # ignore this packet
                 if debug:
-                    print("packet with non-matching length: mac=%s adv_type=%02x plen=%s" %
+                    logging.debug("packet with non-matching length: mac=%s adv_type=%02x plen=%s" %
                           (mac_addr_str, adv_type, plen))
-                    print(raw_packet_to_str(pkt))
+                    logging.debug(raw_packet_to_str(pkt))
                 continue
 
             data = pkt[9:-1]
@@ -359,24 +360,24 @@ def parse_le_advertising_events(sock, mac_addr=None, packet_length=None,
 
             if mac_addr and mac_addr_str not in mac_addr:
                 if debug:
-                    print("packet with non-matching mac %s adv_type=%02x data=%s RSSI=%s" %
+                    logging.debug("packet with non-matching mac %s adv_type=%02x data=%s RSSI=%s" %
                           (mac_addr_str, adv_type, raw_packet_to_str(data), rssi))
                 continue
 
             if debug:
-                print("LE advertisement: mac=%s adv_type=%02x data=%s RSSI=%d" %
+                logging.debug("LE advertisement: mac=%s adv_type=%02x data=%s RSSI=%d" %
                       (mac_addr_str, adv_type, raw_packet_to_str(data), rssi))
 
             if handler is not None:
                 try:
                     handler(mac_addr_str, adv_type, data, rssi)
                 except Exception as e:
-                    print('Exception when calling handler with a BLE advertising event: %r' % (e,))
+                    logging.debug('Exception when calling handler with a BLE advertising event: %r' % (e,))
                     import traceback
                     traceback.print_exc()
 
     except KeyboardInterrupt:
-        print("\nRestore previous socket filter")
+        logging.debug("\nRestore previous socket filter")
         sock.setsockopt(bluez.SOL_HCI, bluez.HCI_FILTER, old_filter)
         raise
 
