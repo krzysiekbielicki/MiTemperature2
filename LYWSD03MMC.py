@@ -225,10 +225,10 @@ def MQTTOnConnect(client, userdata, flags, rc):
     logging.info("MQTT connected with result code "+str(rc))
 
 def MQTTOnPublish(client,userdata,mid):
-	logging.debug("MQTT published, Client:"+client+" Userdata:"+userdata+" mid:"+ mid)
+	logging.debug("MQTT published", extra={'client': client, 'userdata': userdata, 'mid', mid})
 
 def MQTTOnDisconnect(client, userdata,rc):
-	logging.info("MQTT disconnected, Client:"+ client+ "Userdata:"+ userdata+ "RC:"+ rc)	
+	logging.info("MQTT disconnected", extra={'client': client, 'userdata': userdata, 'rc': rc})	
 
 # Main loop --------
 parser=argparse.ArgumentParser(allow_abbrev=False,epilog=readme)
