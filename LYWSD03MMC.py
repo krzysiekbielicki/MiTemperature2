@@ -238,6 +238,7 @@ parser.add_argument("--count","-c", help="Read/Receive N measurements and then e
 parser.add_argument("--interface","-i", help="Specifiy the interface number to use, e.g. 1 for hci1", metavar='N', type=int, default=0)
 parser.add_argument("--unreachable-count","-urc", help="Exit after N unsuccessful connection tries", metavar='N', type=int, default=0)
 parser.add_argument("--mqttconfigfile","-mcf", help="specify a configurationfile for MQTT-Broker")
+parser.add_argument("--log","-l", help="specify loglevel")
 
 
 rounding = parser.add_argument_group("Rounding and debouncing")
@@ -271,6 +272,12 @@ passivegroup.add_argument("--rssi","-rs", help="Report RSSI via callback",action
 
 
 args=parser.parse_args()
+
+if args.loglevel:
+	numeric_level = getattr(logging, args.loglevel.upper(), None)
+	if not isinstance(numeric_level, int):
+ 	   raise ValueError('Invalid log level: %s' % loglevel)
+	logging.basicConfig(level=numeric_level)
 
 if args.devicelistfile or args.mqttconfigfile:
 	import configparser
