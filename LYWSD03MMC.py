@@ -225,10 +225,10 @@ def MQTTOnConnect(client, userdata, flags, rc):
     logging.info("MQTT connected with result code "+str(rc))
 
 def MQTTOnPublish(client,userdata,mid):
-	logging.debug("MQTT published", extra={'client': client, 'userdata': userdata, 'mid': mid})
+	logging.debug("MQTT published client: %s, userdata: %s, mid: %s")
 
 def MQTTOnDisconnect(client, userdata,rc):
-	logging.info("MQTT disconnected", extra={'client': client, 'userdata': userdata, 'rc': rc})	
+	logging.info("MQTT disconnected client: %s, userdata: %s, rc: %s",client, userdata, rc)	
 
 # Main loop --------
 parser=argparse.ArgumentParser(allow_abbrev=False,epilog=readme)
@@ -678,7 +678,7 @@ elif args.passive:
 				if mac in sensors and "sensorname" in sensors[mac]:
 					measurement.sensorname = sensors[mac]["sensorname"]
 
-				logging.debug("Measurement", extra={'temperature': measurement.temperature, 'humidity': measurement.humidity, 'mac': mac, 'sensorname': measurement.sensorname})
+				logging.debug("Measurement %s %s %fC %f%%", mac, measurement.sensorname, measurement.temperature, measurement.humidity)
 				
 				currentMQTTTopic = MQTTTopic
 				if mac in sensors:
