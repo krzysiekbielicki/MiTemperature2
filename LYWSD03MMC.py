@@ -678,7 +678,7 @@ elif args.passive:
 				if mac in sensors and "sensorname" in sensors[mac]:
 					measurement.sensorname = sensors[mac]["sensorname"]
 
-				logging.debug("Measurement %s %s %fC %f%%", mac, measurement.sensorname, measurement.temperature, measurement.humidity)
+				logging.info("Measurement %s %s %fC %f%%", mac, measurement.sensorname, measurement.temperature, measurement.humidity)
 				
 				currentMQTTTopic = MQTTTopic
 				if mac in sensors:
