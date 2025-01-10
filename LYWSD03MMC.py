@@ -381,6 +381,7 @@ if args.passive:
 
 				if args.mqttconfigfile:
 					jsonString=buildJSONString(measurement)
+					myMQTTPublish(currentMQTTTopic, jsonString)
 
 
 		if  args.watchdogtimer:
